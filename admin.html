@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Paradise Aroma — управление</title>
+<style>
+:root{--g:#0a9d7c;--bg:#f6f6f3;--card:#fff;--ink:#111;--muted:#7a7a74;--line:#e7e6e0;--red:#c0392b;--soft:#ecf7f3;--redsoft:#fbebea}
+@media (prefers-color-scheme: dark){:root{--bg:#0e100f;--card:#171a18;--ink:#f1f1ed;--muted:#9a9d96;--line:#2c312d;--soft:#17332b;--redsoft:#3a1f1e}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:18px 14px 60px;max-width:640px;margin:0 auto;color-scheme:light dark}
+h1{font-size:22px;margin:6px 0 12px}
+h2{font-size:15px;margin:16px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--g);color:#fff;border:0;border-radius:12px;padding:12px 14px;font-weight:700;width:100%;margin-top:6px}
+.btn2{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 14px;width:100%}
+.tabs{display:flex;gap:6px;margin:6px 0 10px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:8px 13px;font-weight:700;font-size:13px}
+.tab.on{background:var(--g);color:#fff;border-color:var(--g)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row b{display:block;font-size:14px}
+.row small{color:var(--muted);font-size:12px}
+.tog{flex:0 0 auto;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;border:1px solid;background:var(--soft);color:var(--g);border-color:var(--g)}
+.tog.off{background:var(--redsoft);color:var(--red);border-color:#f1c3c0}
+.del{flex:0 0 auto;border-radius:10px;padding:7px 10px;font-size:12px;font-weight:700;border:1px solid #f1c3c0;background:var(--redsoft);color:var(--red)}
+input,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;margin:4px 0 10px}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;margin:6px 0}
+.chk input{width:auto;margin:0}
+.msg{min-height:20px;font-size:13px;margin:8px 0;color:var(--muted)}
+.msg.err{color:var(--red)}
+.hint{color:var(--muted);font-size:13px;line-height:1.4;margin:4px 0}
+.hide{display:none}
+</style>
+</head>
+<body>
+<h1>Управление сайтом</h1>
+
+<div id="login" class="card hide">
+  <p class="hint" id="loginHint"></p>
+  <input id="pw" type="password" placeholder="Пароль (не менее 6 символов)" autocomplete="current-password">
+  <input id="pw2" type="password" placeholder="Повторите пароль" autocomplete="new-password" class="hide">
+  <button class="btn" id="loginBtn">Войти</button>
+  <div class="msg" id="loginMsg"></div>
+</div>
+
+<div id="panel" class="hide">
+  <div class="card">
+    <div class="tabs">
+      <button class="tab on" data-tab="oils">Масла</button>
+      <button class="tab" data-tab="stop">Парфюмы</button>
+      <button class="tab" data-tab="addp">Новый парфюм</button>
+    </div>
+    <div id="fmtRow" class="tabs hide"></div>
+    <div id="content"></div>
+  </div>
+  <div class="card">
+    <button class="btn" id="saveBtn">Сохранить изменения</button>
+    <div class="msg" id="msg"></div>
+    <button class="btn2" id="logout">Выйти</button>
+  </div>
+</div>
+
+<script>
+const ITEMS = {"oils": [{"name": "Ajmal Amber Wood", "sup": "MG"}, {"name": "Amouage Guidance", "sup": "SELUZ"}, {"name": "Amouage Interlude", "sup": "SELUZ"}, {"name": "Anna Sui Lucky Wish (Soblazn)", "sup": "SELUZ"}, {"name": "Antonio Banderas", "sup": "IBERCHEM"}, {"name": "Attar Collection Crystal Love", "sup": "SELUZ"}, {"name": "Attar Collection Hayati", "sup": "SELUZ"}, {"name": "Attar Collection Musk Kashmir", "sup": "SELUZ"}, {"name": "Bubble Gum", "sup": "SELUZ"}, {"name": "Bvlgari Aqva Pour Homme Marine", "sup": "SELUZ"}, {"name": "Bvlgari Tygar", "sup": "SELUZ"}, {"name": "By Kilian Angels Share", "sup": "SELUZ"}, {"name": "By Kilian Good Girl", "sup": "SELUZ"}, {"name": "Byredo Bal d'Afrique", "sup": "SELUZ"}, {"name": "Byredo Bibliotheque", "sup": "SELUZ"}, {"name": "Byredo Blanche", "sup": "SELUZ"}, {"name": "Carolina Herrera 212 Men", "sup": "SELUZ"}, {"name": "Carolina Herrera Good Girl", "sup": "SELUZ"}, {"name": "Cedrus Chloé", "sup": "SELUZ"}, {"name": "Chanel Allure Homme Sport", "sup": "SELUZ"}, {"name": "Chanel Bleu de Chanel", "sup": "SELUZ"}, {"name": "Chanel Chance", "sup": "SELUZ"}, {"name": "Chanel Coco Mademoiselle", "sup": "IBERCHEM"}, {"name": "Chanel Egoist Platinum", "sup": "IBERCHEM"}, {"name": "Chanel No 5", "sup": "IBERCHEM"}, {"name": "Chanel Tendre", "sup": "SELUZ"}, {"name": "Clive Christian Blonde Amber", "sup": "SELUZ"}, {"name": "Clive Christian Hedonistic", "sup": "SELUZ"}, {"name": "Creed Aventus", "sup": "SELUZ"}, {"name": "Creed Aventus Absolu", "sup": "SELUZ"}, {"name": "Creed Silver Mountain Water", "sup": "IBERCHEM"}, {"name": "D&G Imperatrice", "sup": "SELUZ"}, {"name": "D&G Light Blue", "sup": "IBERCHEM"}, {"name": "Davidoff Cool Water", "sup": "SELUZ"}, {"name": "Davidoff Echo Woman", "sup": "SELUZ"}, {"name": "Dior Homme Intense 2011", "sup": "SELUZ"}, {"name": "Dior Jadore", "sup": "SELUZ"}, {"name": "Dior Sauvage", "sup": "SELUZ"}, {"name": "Escentric Molecules 02", "sup": "SELUZ"}, {"name": "Essential Parfum Bois Imperial", "sup": "SELUZ"}, {"name": "Ex Nihilo Blue Talisman", "sup": "SELUZ"}, {"name": "Ex Nihilo Fleur Narcotique", "sup": "IBERCHEM"}, {"name": "Firdaus (Zam Zam)", "sup": "SELUZ"}, {"name": "Flora Gorgeous Gardenia Gucci", "sup": "SELUZ"}, {"name": "Giorgio Armani Acqua di Gio", "sup": "SELUZ"}, {"name": "Giorgio Armani My Way", "sup": "SELUZ"}, {"name": "Giorgio Armani Si", "sup": "SELUZ"}, {"name": "Giorgio Armani Stronger With You", "sup": "SELUZ"}, {"name": "Givenchy Ange ou Demon", "sup": "SELUZ"}, {"name": "Givenchy Irresistible", "sup": "SELUZ"}, {"name": "Gucci Rush", "sup": "IBERCHEM"}, {"name": "Guerlain Aqua Allegoria Florabloom", "sup": "SELUZ"}, {"name": "Hacivat Nishane", "sup": "SELUZ"}, {"name": "Hermès Terre d'Hermès", "sup": "SELUZ"}, {"name": "HFC Devil's Intrigue", "sup": "SELUZ"}, {"name": "Hormone Paris Gaba", "sup": "SELUZ"}, {"name": "Hugo Boss Boss Bottled", "sup": "SELUZ"}, {"name": "Initio Oud For Greatness", "sup": "SELUZ"}, {"name": "Jean Paul Gaultier Le Parfum", "sup": "SELUZ"}, {"name": "Jean Paul Gaultier Paradise Garden", "sup": "SELUZ"}, {"name": "Jo Malone London Peony & Blush Suede", "sup": "SELUZ"}, {"name": "Jo Malone Wood Sage & Sea Salt", "sup": "SELUZ"}, {"name": "Kenzo L'Eau Par Pour Homme", "sup": "SELUZ"}, {"name": "Кровь Шахида", "sup": "MG"}, {"name": "Lacoste Essential", "sup": "SELUZ"}, {"name": "Lacoste Pour Femme", "sup": "SELUZ"}, {"name": "Lacoste White", "sup": "SELUZ"}, {"name": "Lanvin Eclat d'Arpège", "sup": "SELUZ"}, {"name": "Lanvin Marry Me", "sup": "SELUZ"}, {"name": "Lanvin Modern Princess", "sup": "SELUZ"}, {"name": "Louis Vuitton Afternoon Swim", "sup": "SELUZ"}, {"name": "Louis Vuitton Imagination", "sup": "SELUZ"}, {"name": "Louis Vuitton L'Immensite", "sup": "SELUZ"}, {"name": "Louis Vuitton Ombre Nomad", "sup": "SELUZ"}, {"name": "Louis Vuitton Pacific Chill", "sup": "SELUZ"}, {"name": "Louis Vuitton Stellar Times", "sup": "SELUZ"}, {"name": "Maison Francis Kurkdjian Baccarat Rouge 540", "sup": "SELUZ"}, {"name": "Mango Skin", "sup": "SELUZ"}, {"name": "Marc-Antoine Barrios Ganymede", "sup": "SELUZ"}, {"name": "Marc-Antoine Barrios Tilia", "sup": "SELUZ"}, {"name": "Miss Dior Blooming Bouquet", "sup": "SELUZ"}, {"name": "Montale Arabian Tonka", "sup": "SELUZ"}, {"name": "Montale Chocolate Greedy", "sup": "SELUZ"}, {"name": "Montale Roses Musk", "sup": "IBERCHEM"}, {"name": "Montblanc Explorer", "sup": "SELUZ"}, {"name": "Nasomatto Black Afgano", "sup": "MG"}, {"name": "Orto Parisi Megamare", "sup": "SELUZ"}, {"name": "Oud Maracujá Maison Crivelli", "sup": "SELUZ"}, {"name": "Paco Rabanne 1 Million", "sup": "SELUZ"}, {"name": "Paco Rabanne Invictus", "sup": "SELUZ"}, {"name": "Parfum De Marly Althair", "sup": "SELUZ"}, {"name": "Parfum De Marly Layton", "sup": "SELUZ"}, {"name": "Parfums De Marly Delina", "sup": "SELUZ"}, {"name": "Parfums De Marly Greenley", "sup": "SELUZ"}, {"name": "Prada Paradoxe", "sup": "SELUZ"}, {"name": "Richard White Chocola", "sup": "SELUZ"}, {"name": "Roja Dove Elysium", "sup": "SELUZ"}, {"name": "Shaik No77", "sup": "IBERCHEM"}, {"name": "Sospiro Accento", "sup": "SELUZ"}], "stops": [{"name": "Antonio Banderas", "g": "M"}, {"name": "Mango Skin", "g": "U"}, {"name": "Megamare", "g": "U"}, {"name": "Creed Aventus", "g": "M"}, {"name": "Dior Sauvage", "g": "M"}, {"name": "Baccarat 540", "g": "U"}, {"name": "Tiziana Terenzi Kirke", "g": "U"}, {"name": "Black Afgano", "g": "U"}, {"name": "Tom Ford Lost Cherry", "g": "U"}, {"name": "Tom Ford Tobacco Vanille", "g": "U"}, {"name": "Versace Man Eau Fraich", "g": "M"}, {"name": "Attar Collection Musk Kashmir", "g": "U"}, {"name": "Lacoste Essential", "g": "M"}, {"name": "Lacoste White", "g": "M"}, {"name": "Paco Rabanne One Million", "g": "M"}, {"name": "Paco Rabanne Invictus", "g": "M"}, {"name": "Lanvin Eclat", "g": "W"}, {"name": "Narcotique", "g": "U"}, {"name": "Firdaus (Zam Zam)", "g": "U"}, {"name": "Chanel Allure Homme Sport", "g": "M"}, {"name": "Molecules 02", "g": "U"}, {"name": "Кровь Шахида", "g": "U"}, {"name": "Anna Sui Lucky Wish", "g": "W"}, {"name": "Ganymede", "g": "U"}, {"name": "Ajmal Amber Wood", "g": "U"}, {"name": "Montale Chocolate Greedy", "g": "U"}, {"name": "Louis Vuitton L'Immensite", "g": "M"}, {"name": "Zielinski Rozen Vanilla Blend", "g": "U"}, {"name": "Armani My Way", "g": "W"}, {"name": "Louis Vuitton Stellar Times", "g": "U"}, {"name": "Bvlgari Tygar", "g": "M"}, {"name": "D G Imperatrice", "g": "W"}, {"name": "Shaik 77", "g": "M"}, {"name": "Armani Stronger With You", "g": "M"}, {"name": "Givenchy Ange Ou Demon", "g": "W"}, {"name": "Armani Acqua Di Gio", "g": "M"}, {"name": "YSL Black Opium", "g": "W"}, {"name": "Oud Maracujá", "g": "U"}, {"name": "Carolina Herrera 212 Man", "g": "M"}, {"name": "Bubble Gum", "g": "U"}, {"name": "Montblanc Explorer", "g": "M"}, {"name": "Chanel Bleu De Chanel", "g": "M"}, {"name": "Chanel Tendre", "g": "W"}, {"name": "Chanel Chance", "g": "W"}, {"name": "Attar Collection Crystal Love", "g": "W"}, {"name": "Davidoff Cool Water", "g": "M"}, {"name": "Versace Bright Crystal", "g": "W"}, {"name": "Tom Ford Oud Wood", "g": "U"}, {"name": "Versace Eros", "g": "M"}, {"name": "Victoria Secret Bombshell", "g": "W"}, {"name": "Armani SI", "g": "W"}, {"name": "Carolina Herrera Good Girl", "g": "W"}, {"name": "Jo Malone Sea Salt", "g": "U"}, {"name": "Flora Gorgeous Gardenia Gucci", "g": "W"}, {"name": "D G Ligth Blue", "g": "M"}, {"name": "By Killian Good Girl", "g": "W"}, {"name": "Chanel No5", "g": "U"}, {"name": "Montale Roses Musk", "g": "W"}, {"name": "HFC Devil's Intrigue", "g": "W"}, {"name": "Dior Jadore", "g": "W"}, {"name": "Blue Talisman", "g": "U"}, {"name": "Chanel Coco Mademoiselle", "g": "W"}, {"name": "YSL Libre", "g": "W"}, {"name": "Zielinski Rozen Black Papper", "g": "U"}, {"name": "Sospiro Accento", "g": "U"}, {"name": "Lacoste Pour Femme", "g": "W"}, {"name": "Attar Collection Hayati", "g": "W"}, {"name": "Pink Molecule 090", "g": "U"}, {"name": "Bvlgari Acqa Marine", "g": "M"}, {"name": "Afternoon Swim Louis Vuitton", "g": "U"}, {"name": "Christian Dior Homme Intense", "g": "M"}, {"name": "Tom Ford Ombré Leather", "g": "U"}, {"name": "Creed Silver", "g": "U"}, {"name": "Attila", "g": "U"}, {"name": "Arabic Sweetness", "g": "U"}, {"name": "Metis", "g": "U"}, {"name": "Louis Vuitton Imagination", "g": "M"}, {"name": "Roja Dove Elysium", "g": "M"}, {"name": "Amouage Guidance", "g": "W"}, {"name": "Clive Christian Hedonistic", "g": "U"}, {"name": "Louis Vuitton Ombre Nomad", "g": "U"}, {"name": "Xerjoff Naxos", "g": "U"}, {"name": "Prada Paradoxe", "g": "W"}, {"name": "YSL Y", "g": "M"}, {"name": "Parfum De Marly Altrair", "g": "M"}, {"name": "Parfum De Marly Layton", "g": "M"}, {"name": "Byredo Bibliotheque", "g": "U"}, {"name": "Cedrus Chloé", "g": "U"}, {"name": "By Kilian Angels Share", "g": "U"}, {"name": "Jean Paul Gaultier Paradise Garden", "g": "M"}, {"name": "Versace Pour Homme", "g": "M"}, {"name": "Byredo Bal D'Afrique", "g": "U"}, {"name": "Miss Dior Blooming Bouquet", "g": "W"}, {"name": "Montale Arabian Tonka", "g": "U"}, {"name": "Parfums De Marly Delina", "g": "W"}, {"name": "Kenzo L'eau Par Pour Homme", "g": "M"}, {"name": "Amouage Interlude", "g": "M"}, {"name": "Creed Aventus Absolu", "g": "M"}, {"name": "Parfums De Marly Greenley", "g": "U"}], "FMT": ["Миск", "Парфюм", "Авто"], "PRICE": [400, 800, 600]};   // oils and perfumes of the catalog, generated at build time
+const FMT = ["Миск", "Парфюм", "Авто"];
+const PRICE = [400, 800, 600];
+const GENDER = {M: "Мужской", W: "Женский", U: "Унисекс"};
+const API = "/api/data";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let token = sessionStorage.getItem("pa_owner") || "";
+let S = {tab: "oils", fmt: 0, out: new Set(), extra: []};
+
+async function load(){
+  const r = await fetch(API, {cache: "no-store"});
+  const d = await r.json();
+  S.out = new Set(d.out || []);
+  S.extra = d.extra || [];
+}
+function allStops(){
+  return [...ITEMS.stops, ...S.extra.map(x => ({name: x.name, g: x.g}))];
+}
+function setMsg(text, err){
+  const m = $("msg"); m.textContent = text; m.className = "msg" + (err ? " err" : "");
+}
+function list(rows){
+  return rows.sort((a,b) => a.name.localeCompare(b.name, "en", {sensitivity: "base"})).map(r => {
+    const off = S.out.has(r.key);
+    return `<div class="row"><div><b>${esc(r.name)}</b><small>${esc(r.sub || "")}</small></div>
+      <button class="tog ${off ? "off" : ""}" data-key="${esc(r.key)}">${off ? "Нет в наличии" : "В наличии"}</button></div>`;
+  }).join("");
+}
+function addForm(){
+  return `<h2>Новый парфюм</h2>
+    <input id="npName" placeholder="Название (латиницей), например Creed Aventus">
+    <select id="npG"><option value="U">Унисекс</option><option value="M">Мужской</option><option value="W">Женский</option></select>
+    <div class="hint">Отметьте форматы, которые есть в наличии:</div>
+    ${FMT.map((f,i) => `<label class="chk"><input type="checkbox" data-npf="${i}" checked> ${f} · ${PRICE[i]} ₸</label>`).join("")}
+    <button class="btn" id="npAdd">Добавить в каталог</button>
+    <p class="hint">Новый парфюм появится в каталоге после нажатия «Сохранить изменения».</p>`;
+}
+function extraList(){
+  if(!S.extra.length) return `<p class="hint">Добавленных парфюмов пока нет.</p>`;
+  return `<h2>Добавленные</h2>` + S.extra.map((x,i) => `<div class="row">
+      <div><b>${esc(x.name)}</b><small>${esc(GENDER[x.g] || "")}</small></div>
+      <button class="del" data-del="${i}">Удалить</button></div>`).join("");
+}
+function render(){
+  $("fmtRow").className = "tabs" + (S.tab === "stop" ? "" : " hide");
+  if(S.tab === "stop"){
+    $("fmtRow").innerHTML = FMT.map((f,i) => `<button class="tab ${i === S.fmt ? "on" : ""}" data-fmt="${i}">${f} · ${PRICE[i]} ₸</button>`).join("");
+  }
+  document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab));
+  if(S.tab === "oils"){
+    $("content").innerHTML = list(ITEMS.oils.map(o => ({key: "o|" + o.name, name: o.name, sub: o.sup})));
+  } else if(S.tab === "stop"){
+    $("content").innerHTML = list(allStops().map(s => ({key: "s|" + s.name + "|" + S.fmt, name: s.name, sub: (GENDER[s.g] || "") + " · " + FMT[S.fmt]})));
+  } else {
+    $("content").innerHTML = addForm() + extraList();
+  }
+}
+async function save(){
+  const r = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json", "X-Owner-Token": token},
+    body: JSON.stringify({out: [...S.out], extra: S.extra})});
+  if(r.status === 403) return {ok: false, forbidden: true};
+  if(!r.ok) return {ok: false};
+  return {ok: true};
+}
+function showPanel(){
+  $("login").classList.add("hide");
+  $("panel").classList.remove("hide");
+  render();
+}
+let configured = false;
+function showLogin(text){
+  $("panel").classList.add("hide");
+  $("login").classList.remove("hide");
+  $("loginMsg").textContent = text || "";
+  if(!configured){
+    $("loginHint").textContent = "Первый вход: придумайте пароль владельца. Он нужен для входа и для сохранения изменений. Запомните его.";
+    $("pw2").classList.remove("hide");
+    $("loginBtn").textContent = "Создать пароль и войти";
+  } else {
+    $("loginHint").textContent = "Введите пароль владельца, чтобы менять стоп-лист и добавлять парфюмы.";
+    $("pw2").classList.add("hide");
+    $("loginBtn").textContent = "Войти";
+  }
+}
+async function authStatus(){
+  const r = await fetch("/api/auth", {cache: "no-store"});
+  return (await r.json()).configured === true;
+}
+
+document.addEventListener("click", async e => {
+  const t = e.target;
+  if(t.closest("[data-tab]")){ S.tab = t.closest("[data-tab]").dataset.tab; render(); return; }
+  if(t.closest("[data-fmt]")){ S.fmt = Number(t.closest("[data-fmt]").dataset.fmt); render(); return; }
+  if(t.closest("[data-key]")){
+    const k = t.closest("[data-key]").dataset.key;
+    S.out.has(k) ? S.out.delete(k) : S.out.add(k);
+    render(); setMsg("Есть несохранённые изменения.");
+    return;
+  }
+  if(t.closest("[data-del]")){
+    const i = Number(t.closest("[data-del]").dataset.del);
+    const name = S.extra[i].name;
+    S.extra.splice(i, 1);
+    [...S.out].filter(k => k.startsWith("s|" + name + "|")).forEach(k => S.out.delete(k));
+    render(); setMsg("Есть несохранённые изменения.");
+    return;
+  }
+  if(t.id === "npAdd"){
+    const name = $("npName").value.trim();
+    const g = $("npG").value;
+    if(!name){ setMsg("Введите название.", true); return; }
+    if(allStops().some(x => x.name.toLowerCase() === name.toLowerCase())){ setMsg("Такой парфюм уже есть.", true); return; }
+    const off = [0,1,2].map(f => !document.querySelector(`[data-npf="${f}"]`).checked);
+    S.extra.push({name, g, flags: off});
+    off.forEach((v,f) => { if(v) S.out.add("s|" + name + "|" + f); });
+    render(); setMsg("Добавлено: " + name + ". Не забудьте сохранить.");
+    return;
+  }
+  if(t.id === "saveBtn"){
+    if(!token){ showLogin("Войдите снова."); return; }
+    setMsg("Сохраняю…");
+    const r = await save();
+    if(r.forbidden){ token = ""; sessionStorage.removeItem("pa_owner"); showLogin("Неверный пароль."); return; }
+    setMsg(r.ok ? "Сохранено. Посетители увидят изменения после обновления страницы." : "Не удалось сохранить. Попробуйте ещё раз.", !r.ok);
+    return;
+  }
+  if(t.id === "loginBtn"){
+    const pw = $("pw").value;
+    if(pw.length < 6){ $("loginMsg").textContent = "Пароль — не менее 6 символов."; return; }
+    if(!configured && pw !== $("pw2").value){ $("loginMsg").textContent = "Пароли не совпадают."; return; }
+    $("loginMsg").textContent = "Проверяю…";
+    const r = await fetch("/api/auth", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({password: pw})});
+    if(r.status === 403){ $("loginMsg").textContent = "Неверный пароль."; return; }
+    if(!r.ok){ $("loginMsg").textContent = "Не удалось войти. Попробуйте ещё раз."; return; }
+    configured = true;
+    token = pw;
+    sessionStorage.setItem("pa_owner", token);
+    showPanel();
+    return;
+  }
+  if(t.id === "logout"){
+    token = ""; sessionStorage.removeItem("pa_owner");
+    showLogin("Вы вышли.");
+  }
+});
+
+(async () => {
+  try{ await load(); configured = await authStatus(); }
+  catch(e){ document.body.insertAdjacentHTML("beforeend", '<p class="hint">Нет связи с сервером.</p>'); return; }
+  if(token && configured) showPanel(); else showLogin();
+})();
+</script>
+</body>
+</html>
